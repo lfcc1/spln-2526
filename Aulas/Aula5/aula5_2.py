@@ -1,21 +1,37 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import string
 
-html_doc = requests.get("https://www.atlasdasaude.pt/doencasaaz/a")
 
-soup = BeautifulSoup(html_doc.text, 'html.parser')
 
-#print(soup)
 
-doencas_div = soup.find_all("div", class_="views-row")
+def extrai_pagina(url):
+    res = {}
+    html_doc = requests.get(url)
 
+    soup = BeautifulSoup(html_doc.text, 'html.parser')
+
+    #print(soup)
+
+    doencas_div = soup.find_all("div", class_="views-row")
+
+    res = {}
+
+    for div in doencas_div:
+        designacao = div.div.h3.a.text
+        descricao = div.find("div", class_="views-field-body").div.text
+        res[designacao] = descricao.strip()
+    return res
+
+
+
+url = "https://www.atlasdasaude.pt/doencasaaz/"
 res = {}
 
-for div in doencas_div:
-    designacao = div.div.h3.a.text
-    descricao = div.find("div", class_="views-field-body").div.text
-    res[designacao] = descricao.strip()
+for l in string.ascii_lowercase:
+    res = res | extrai_pagina(url+ l)
+
 
 
 f_out = open("doencas.json", "w")
